@@ -17,34 +17,73 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef APPWIDGET_H
-#define APPWIDGET_H
+#include "Capture.h"
+#include <QCoreApplication>
+#include <QDirIterator>
+#include <QImage>
+#include <QTimerEvent>
+#ifdef Q_WS_X11
+#include <QX11Info>
+#else
+#include <QApplication>
+#endif
+#include <QDesktopWidget>
+#include <QPixmap>
 
-#include <QWidget>
-class QPixmap;
-class QPoint;
-class QSettings;
-class Capture;
-
-namespace Ui { class AppWidgetClass; }
-
-class AppWidget : public QWidget
+Capture::Capture( QObject * parent )
+    : QObject( parent )
+    , m_enabled( false )
+    , m_fps( 0 )
 {
-    Q_OBJECT
-    public:
-        AppWidget(QWidget *parent = 0);
-        ~AppWidget();
+}
 
-    private:
-        void saveSettings();
-        Ui::AppWidgetClass * ui;
-        QSettings * m_settings;
-        Capture * m_capture;
+void Capture::setEnabled( bool enabled )
+{
+    m_enabled = enabled;
+}
 
-    private Q_SLOTS:
-        void slotOnTopChanged();
-        void slotCapParamsChanged();
-        void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );
-};
+bool Capture::enabled() const
+{
+    return m_enabled;
+}
 
-#endif // APPWIDGET_H
+void Capture::setGeometry( const QRect & geometry )
+{
+    m_geometry = geometry;
+}
+
+QRect Capture::geometry() const
+{
+    return m_geometry;
+}
+
+void Capture::setFrequency( int fps )
+{
+    m_fps = fps;
+    m_timer.start( 1000 / m_fps, this );
+}
+
+int Capture::frequency() const
+{
+    return m_fps;
+}
+
+void Capture::timerEvent( QTimerEvent * event )
+{
+    if ( event->timerId() != m_timer.timerId() || m_geometry.isNull() )
+        return QObject::timerEvent( event );
+
+    if ( !m_enabled )
+        return;
+
+    QPixmap grabbedPixmap = QPixmap::grabWindow(
+#if defined(Q_WS_X11)
+            QX11Info::appRootWindow(),
+#else
+            QApplication::desktop()->winId(),
+#endif
+            m_geometry.left(), m_geometry.top(), m_geometry.width(), m_geometry.height() );
+
+
+    emit gotPixmap( grabbedPixmap, QCursor::pos() - QPoint( m_geometry.topLeft() ) );
+}

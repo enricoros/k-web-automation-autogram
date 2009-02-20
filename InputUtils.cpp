@@ -17,34 +17,60 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef APPWIDGET_H
-#define APPWIDGET_H
+#include "InputUtils.h"
+#include <QPoint>
+#include <QCursor>
 
-#include <QWidget>
-class QPixmap;
-class QPoint;
-class QSettings;
-class Capture;
+#if defined(Q_WS_X11)
+#include <QX11Info>
+#include <X11/extensions/XTest.h>
+#elif defined(Q_WS_WIN)
+#include <windows.h>
+#else
+#warning leftClick not implemented for this Windowing System
+#endif
 
-namespace Ui { class AppWidgetClass; }
-
-class AppWidget : public QWidget
+void InputUtils::mouseLeftClick()
 {
-    Q_OBJECT
-    public:
-        AppWidget(QWidget *parent = 0);
-        ~AppWidget();
+    mouseLeftPress();
+    mouseLeftRelease();
+}
 
-    private:
-        void saveSettings();
-        Ui::AppWidgetClass * ui;
-        QSettings * m_settings;
-        Capture * m_capture;
+void InputUtils::mouseLeftPress()
+{
+#if defined(Q_WS_X11)
+    XTestFakeButtonEvent( QX11Info::display(), 1, true, CurrentTime );
+#elif defined(Q_WS_WIN)
+    INPUT Input={0};
+    Input.type = INPUT_MOUSE;
+    Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+    ::SendInput( 1, &Input, sizeof(INPUT) );
+#endif
+}
 
-    private Q_SLOTS:
-        void slotOnTopChanged();
-        void slotCapParamsChanged();
-        void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );
-};
+void InputUtils::mouseLeftRelease()
+{
+#if defined(Q_WS_X11)
+    XTestFakeButtonEvent( QX11Info::display(), 1, false, CurrentTime );
+#elif defined(Q_WS_WIN)
+    INPUT Input={0};
+    Input.type = INPUT_MOUSE;
+    Input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+    ::SendInput( 1, &Input, sizeof(INPUT) );
+#endif
+}
 
-#endif // APPWIDGET_H
+void InputUtils::mouseMove( int x, int y )
+{
+    QCursor::setPos( x, y );
+}
+
+void InputUtils::keyWrite( const QString & /*string*/ )
+{
+    qWarning( "InputUtils::keyWrite: notImplemented()");
+}
+
+void InputUtils::keyClick( int /*qtKeyCode*/ )
+{
+    qWarning( "InputUtils::keyClick: notImplemented()");
+}

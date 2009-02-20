@@ -17,34 +17,28 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef APPWIDGET_H
-#define APPWIDGET_H
+#ifndef INPUTUTILS_H
+#define INPUTUTILS_H
 
-#include <QWidget>
-class QPixmap;
-class QPoint;
-class QSettings;
-class Capture;
+#include <QObject>
+#include <QPoint>
 
-namespace Ui { class AppWidgetClass; }
-
-class AppWidget : public QWidget
+class InputUtils : public QObject
 {
-    Q_OBJECT
     public:
-        AppWidget(QWidget *parent = 0);
-        ~AppWidget();
+        // MOUSE
+        static void mouseLeftClick();
+        //static void mouseRightClick();
+        static void mouseLeftPress();
+        static void mouseLeftRelease();
+        static void mouseMove( int x, int y );
+        static inline void mouseMove( const QPoint & point ) { mouseMove( point.x(), point.y() ); }
 
-    private:
-        void saveSettings();
-        Ui::AppWidgetClass * ui;
-        QSettings * m_settings;
-        Capture * m_capture;
-
-    private Q_SLOTS:
-        void slotOnTopChanged();
-        void slotCapParamsChanged();
-        void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );
+        // KEYBOARD
+        static void keyWrite( const QString & string );
+        static void keyClick( int qtKeyCode );
+        //static void keyPress( int qtKeycode );
+        //static void keyRelease( int qtKeycode );
 };
 
-#endif // APPWIDGET_H
+#endif // INPUTUTILS_H

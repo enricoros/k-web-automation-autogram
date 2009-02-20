@@ -17,34 +17,38 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef APPWIDGET_H
-#define APPWIDGET_H
+#ifndef __Capture_h__
+#define __Capture_h__
 
-#include <QWidget>
-class QPixmap;
-class QPoint;
-class QSettings;
-class Capture;
+#include <QObject>
+#include <QBasicTimer>
+#include <QList>
+#include <QImage>
 
-namespace Ui { class AppWidgetClass; }
-
-class AppWidget : public QWidget
+class Capture : public QObject
 {
     Q_OBJECT
     public:
-        AppWidget(QWidget *parent = 0);
-        ~AppWidget();
+        Capture( QObject * parent );
+
+        void setEnabled( bool enabled );
+        bool enabled() const;
+        void setGeometry( const QRect & geometry );
+        QRect geometry() const;
+        void setFrequency( int fps );
+        int frequency() const;
+
+    Q_SIGNALS:
+        void gotPixmap( const QPixmap & pixmap, const QPoint & cursorPos );
+
+    protected:
+        void timerEvent( QTimerEvent * event );
 
     private:
-        void saveSettings();
-        Ui::AppWidgetClass * ui;
-        QSettings * m_settings;
-        Capture * m_capture;
-
-    private Q_SLOTS:
-        void slotOnTopChanged();
-        void slotCapParamsChanged();
-        void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );
+        QBasicTimer m_timer;
+        QRect m_geometry;
+        bool m_enabled;
+        int m_fps;
 };
 
-#endif // APPWIDGET_H
+#endif
