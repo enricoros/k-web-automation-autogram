@@ -156,7 +156,7 @@ qWarning("%s %d", __PRETTY_FUNCTION__, checked);
 void AppWidget::on_letters_textChanged( const QString & text )
 {
     // TEMP FOR TESTING
-    QStringList words = m_scrambler->allWords( text );
+    QStringList words = m_scrambler->allWords( text, 3, 6 );
     ui->words->appendPlainText( words.join( "," ) );
 }
 
