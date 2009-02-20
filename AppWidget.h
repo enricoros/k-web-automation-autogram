@@ -25,6 +25,7 @@ class QPixmap;
 class QPoint;
 class QSettings;
 class Capture;
+class Scrambler;
 
 namespace Ui { class AppWidgetClass; }
 
@@ -40,8 +41,10 @@ class AppWidget : public QWidget
         Ui::AppWidgetClass * ui;
         QSettings * m_settings;
         Capture * m_capture;
+        Scrambler * m_scrambler;
 
     private Q_SLOTS:
+        void on_letters_textChanged( const QString & string );
         void slotOnTopChanged();
         void slotCapParamsChanged();
         void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );

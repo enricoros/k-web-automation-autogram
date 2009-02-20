@@ -178,14 +178,7 @@
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QLineEdit" name="letters">
-        <property name="frame">
-         <bool>false</bool>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="letters"/>
       </item>
       <item row="3" column="0" colspan="3">
        <widget class="QPlainTextEdit" name="words"/>

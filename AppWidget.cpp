@@ -20,6 +20,7 @@
 #include "AppWidget.h"
 #include "ui_AppWidget.h"
 #include "Capture.h"
+#include "Scrambler.h"
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QPixmap>
@@ -69,6 +70,9 @@ AppWidget::AppWidget(QWidget *parent)
     connect( ui->onTop, SIGNAL(toggled(bool)), this, SLOT(slotOnTopChanged()) );
     slotOnTopChanged();
 
+    // create the Scrambler
+    m_scrambler = new Scrambler();
+
     // create the capture
     m_capture = new Capture( this );
     connect( m_capture, SIGNAL(gotPixmap(const QPixmap &, const QPoint &)),
@@ -80,6 +84,7 @@ AppWidget::~AppWidget()
 {
     saveSettings();
     delete m_settings;
+    delete m_scrambler;
     delete m_capture;
     delete ui;
 }
@@ -115,4 +120,10 @@ void AppWidget::slotCapParamsChanged()
 void AppWidget::slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor )
 {
     // TODO
+}
+
+void AppWidget::on_letters_textChanged( const QString & text )
+{
+    QStringList words = m_scrambler->allWords( text );
+    ui->words->appendPlainText( words.join( "," ) );
 }
