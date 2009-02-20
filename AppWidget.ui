@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>376</width>
-    <height>405</height>
+    <width>430</width>
+    <height>387</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -92,10 +92,10 @@
          <number>2</number>
         </property>
         <property name="maximum">
-         <number>100</number>
+         <number>40</number>
         </property>
         <property name="value">
-         <number>50</number>
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -115,30 +115,64 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QPushButton" name="btnOff">
+       <property name="text">
+        <string>Off</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="btnGame">
        <property name="text">
         <string>Game</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btnChallenge">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Challenge</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btnLearn1">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>A-Learn 1</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btnLearn2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>A-Learn 2</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

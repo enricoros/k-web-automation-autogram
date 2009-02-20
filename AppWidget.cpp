@@ -26,6 +26,7 @@
 #include <QPixmap>
 #include <QPoint>
 #include <QSettings>
+#include <QButtonGroup>
 
 #define DEFAULT_WIDTH 640
 #define DEFAULT_HEIGHT 480
@@ -68,6 +69,12 @@ AppWidget::AppWidget(QWidget *parent)
     connect( ui->height, SIGNAL(valueChanged(int)), this, SLOT(slotCapParamsChanged()) );
     connect( ui->frequency, SIGNAL(valueChanged(int)), this, SLOT(slotCapParamsChanged()) );
     connect( ui->onTop, SIGNAL(toggled(bool)), this, SLOT(slotOnTopChanged()) );
+    QButtonGroup * buttGroup = new QButtonGroup( this );
+    buttGroup->addButton( ui->btnOff );
+    buttGroup->addButton( ui->btnGame );
+    buttGroup->addButton( ui->btnChallenge );
+    buttGroup->addButton( ui->btnLearn1 );
+    buttGroup->addButton( ui->btnLearn2 );
     slotOnTopChanged();
 
     // create the Scrambler
@@ -78,6 +85,9 @@ AppWidget::AppWidget(QWidget *parent)
     connect( m_capture, SIGNAL(gotPixmap(const QPixmap &, const QPoint &)),
              this, SLOT(slotProcessPixmap(const QPixmap &, const QPoint &)) );
     slotCapParamsChanged();
+
+    // ### TEMP
+    m_capture->setEnabled( true );
 }
 
 AppWidget::~AppWidget()
@@ -120,10 +130,33 @@ void AppWidget::slotCapParamsChanged()
 void AppWidget::slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor )
 {
     // TODO
+    //qWarning("GOTCHA!");
+}
+
+void AppWidget::on_btnGame_toggled( bool checked )
+{
+qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+}
+
+void AppWidget::on_btnChallenge_toggled( bool checked )
+{
+qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+}
+
+void AppWidget::on_btnLearn1_toggled( bool checked )
+{
+qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+}
+
+void AppWidget::on_btnLearn2_toggled( bool checked )
+{
+qWarning("%s %d", __PRETTY_FUNCTION__, checked);
 }
 
 void AppWidget::on_letters_textChanged( const QString & text )
 {
+    // TEMP FOR TESTING
     QStringList words = m_scrambler->allWords( text );
     ui->words->appendPlainText( words.join( "," ) );
 }
+

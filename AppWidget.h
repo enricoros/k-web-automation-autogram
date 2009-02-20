@@ -44,6 +44,10 @@ class AppWidget : public QWidget
         Scrambler * m_scrambler;
 
     private Q_SLOTS:
+        void on_btnGame_toggled( bool checked );
+        void on_btnChallenge_toggled( bool checked );
+        void on_btnLearn1_toggled( bool checked );
+        void on_btnLearn2_toggled( bool checked );
         void on_letters_textChanged( const QString & string );
         void slotOnTopChanged();
         void slotCapParamsChanged();
