@@ -3,6 +3,7 @@
 # -------------------------------------------------
 TARGET = WordChallengeCheat
 TEMPLATE = app
+_DIR =.obj
 SOURCES += main.cpp \
     AppWidget.cpp \
     Capture.cpp \
@@ -16,3 +17,8 @@ HEADERS += AppWidget.h \
     GameState.h
 FORMS += AppWidget.ui
 unix:LIBS += -lXtst
+
+OBJECTS_DIR =.obj
+MOC_DIR=.obj
+RCC_DIR =.obj
+UI_DIR =.obj
