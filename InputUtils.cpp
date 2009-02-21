@@ -24,6 +24,18 @@
 #if defined(Q_WS_X11)
 #include <QX11Info>
 #include <X11/extensions/XTest.h>
+//include <X11/keysymdef.h> defines:
+#define KS_X11_BACKSPACE    0xff08
+#define KS_X11_ESCAPE       0xff1b
+#define KS_X11_RETURN       0xff0d
+#define KS_X11_SHIFT_L      0xffe1
+#define KS_X11_SHIFT_R      0xffe2
+#define KS_X11_CTRL_L       0xffe3
+#define KS_X11_CTRL_R       0xffe4
+#define KS_X11_LEFT         0xff51
+#define KS_X11_UP           0xff52
+#define KS_X11_RIGHT        0xff53
+#define KS_X11_DOWN         0xff54
 #elif defined(Q_WS_WIN)
 #include <windows.h>
 #else
@@ -65,12 +77,29 @@ void InputUtils::mouseMove( int x, int y )
     QCursor::setPos( x, y );
 }
 
-void InputUtils::keyWrite( const QString & /*string*/ )
+void InputUtils::keyWrite( const QString & string )
 {
-    qWarning( "InputUtils::keyWrite: notImplemented()");
+    int len = string.length();
+    for ( int i = 0; i < len; i++ )
+        keyClickKeysym( string.at( i ).toLatin1() );
 }
 
-void InputUtils::keyClick( int /*qtKeyCode*/ )
+void InputUtils::keyClickKeysym( char latin1 )
 {
+#if defined(Q_WS_X11)
+    Display * display = QX11Info::display();
+    unsigned int keyCode = XKeysymToKeycode( display, latin1 );
+    if ( !keyCode ) {
+        if ( latin1 == '\n' )
+            keyCode = XKeysymToKeycode( display, KS_X11_RETURN );
+        if ( !keyCode ) {
+            qWarning( "InputUtils::keyClickKeysym(X11): cannot get keycode of char '%d', please provide the conversion.", latin1 );
+            return;
+        }
+    }
+    XTestFakeKeyEvent( display, keyCode, true, CurrentTime );
+    XTestFakeKeyEvent( display, keyCode, false, CurrentTime );
+#else
     qWarning( "InputUtils::keyClick: notImplemented()");
+#endif
 }

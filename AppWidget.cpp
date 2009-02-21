@@ -20,13 +20,15 @@
 #include "AppWidget.h"
 #include "ui_AppWidget.h"
 #include "Capture.h"
+#include "InputUtils.h"
 #include "Scrambler.h"
 #include <QApplication>
+#include <QButtonGroup>
 #include <QDesktopWidget>
 #include <QPixmap>
 #include <QPoint>
 #include <QSettings>
-#include <QButtonGroup>
+#include <QTimer>
 
 #define DEFAULT_WIDTH 640
 #define DEFAULT_HEIGHT 480
