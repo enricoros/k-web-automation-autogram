@@ -17,43 +17,25 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef APPWIDGET_H
-#define APPWIDGET_H
+#include "GameState.h"
+#include <QTimer>
 
-#include <QWidget>
-class QPixmap;
-class QPoint;
-class QSettings;
-class Capture;
-class GameState;
-class Scrambler;
-
-namespace Ui { class AppWidgetClass; }
-
-class AppWidget : public QWidget
+GameState::GameState( Capture * capture, QObject * parent )
+    : QObject( parent )
+    , m_capture( capture )
 {
-    Q_OBJECT
-    public:
-        AppWidget(QWidget *parent = 0);
-        ~AppWidget();
+    qWarning( "<GAME>" );
+    QTimer::singleShot( 3000, this, SLOT(slotTemp()) );
+}
 
-    private:
-        void saveSettings();
-        Ui::AppWidgetClass * ui;
-        QSettings * m_settings;
-        Capture * m_capture;
-        Scrambler * m_scrambler;
-        GameState * m_game;
+GameState::~GameState()
+{
+    // don't delete m_capture, since it's external
+    qWarning( "</GAME>" );
+}
 
-    private Q_SLOTS:
-        void on_btnGame_toggled( bool checked );
-        void on_btnChallenge_toggled( bool checked );
-        void on_btnLearn1_toggled( bool checked );
-        void on_btnLearn2_toggled( bool checked );
-        void on_letters_textChanged( const QString & string );
-        void slotOnTopChanged();
-        void slotCapParamsChanged();
-        void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );
-};
-
-#endif // APPWIDGET_H
+void GameState::slotTemp()
+{
+    qWarning( "<GAME> ended" );
+    emit gameEnded();
+}

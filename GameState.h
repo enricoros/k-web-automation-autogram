@@ -17,43 +17,27 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef APPWIDGET_H
-#define APPWIDGET_H
+#ifndef __GameState_h__
+#define __GameState_h__
 
-#include <QWidget>
-class QPixmap;
-class QPoint;
-class QSettings;
+#include <QObject>
 class Capture;
-class GameState;
-class Scrambler;
 
-namespace Ui { class AppWidgetClass; }
-
-class AppWidget : public QWidget
+class GameState : public QObject
 {
     Q_OBJECT
     public:
-        AppWidget(QWidget *parent = 0);
-        ~AppWidget();
+        GameState( Capture * capture, QObject * parent );
+        ~GameState();
+
+    Q_SIGNALS:
+        void gameEnded();
 
     private:
-        void saveSettings();
-        Ui::AppWidgetClass * ui;
-        QSettings * m_settings;
         Capture * m_capture;
-        Scrambler * m_scrambler;
-        GameState * m_game;
 
     private Q_SLOTS:
-        void on_btnGame_toggled( bool checked );
-        void on_btnChallenge_toggled( bool checked );
-        void on_btnLearn1_toggled( bool checked );
-        void on_btnLearn2_toggled( bool checked );
-        void on_letters_textChanged( const QString & string );
-        void slotOnTopChanged();
-        void slotCapParamsChanged();
-        void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );
+        void slotTemp();
 };
 
-#endif // APPWIDGET_H
+#endif // __GameState_h__

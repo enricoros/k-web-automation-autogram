@@ -7,12 +7,12 @@ SOURCES += main.cpp \
     AppWidget.cpp \
     Capture.cpp \
     InputUtils.cpp \
-    Scrambler.cpp
-
+    Scrambler.cpp \
+    GameState.cpp
 HEADERS += AppWidget.h \
     Capture.h \
     InputUtils.h \
-    Scrambler.h
-
+    Scrambler.h \
+    GameState.h
 FORMS += AppWidget.ui
-unix: LIBS += -lXtst
+unix:LIBS += -lXtst

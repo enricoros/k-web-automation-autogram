@@ -20,6 +20,7 @@
 #include "AppWidget.h"
 #include "ui_AppWidget.h"
 #include "Capture.h"
+#include "GameState.h"
 #include "InputUtils.h"
 #include "Scrambler.h"
 #include <QApplication>
@@ -41,6 +42,9 @@ AppWidget::AppWidget(QWidget *parent)
 #else
     , m_settings( new QSettings() )
 #endif
+    , m_capture( 0 )
+    , m_scrambler( 0 )
+    , m_game( 0 )
 {
     // create ui
     ui->setupUi(this);
@@ -96,6 +100,7 @@ AppWidget::~AppWidget()
 {
     saveSettings();
     delete m_settings;
+    delete m_game;
     delete m_scrambler;
     delete m_capture;
     delete ui;
@@ -137,22 +142,27 @@ void AppWidget::slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor
 
 void AppWidget::on_btnGame_toggled( bool checked )
 {
-qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+
+    delete m_game;
+    m_game = 0;
+    if ( checked )
+        m_game = new GameState( m_capture, this );
 }
 
 void AppWidget::on_btnChallenge_toggled( bool checked )
 {
-qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
 }
 
 void AppWidget::on_btnLearn1_toggled( bool checked )
 {
-qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
 }
 
 void AppWidget::on_btnLearn2_toggled( bool checked )
 {
-qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
 }
 
 void AppWidget::on_letters_textChanged( const QString & text )
