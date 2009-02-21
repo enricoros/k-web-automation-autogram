@@ -36,8 +36,8 @@ class InputUtils : public QObject
 
         // KEYBOARD
         static void keyWrite( const QString & string );
-        //static void keyClickQt( quint32 );
         static void keyClickKeysym( char latin1 );
+        static void keyClickSpecial( int qtKeyCode );
         //static void keyPress( int qtKeycode );
         //static void keyRelease( int qtKeycode );
 };

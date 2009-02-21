@@ -52,6 +52,7 @@ void InputUtils::mouseLeftPress()
 {
 #if defined(Q_WS_X11)
     XTestFakeButtonEvent( QX11Info::display(), 1, true, CurrentTime );
+    XFlush( QX11Info::display() );
 #elif defined(Q_WS_WIN)
     INPUT Input={0};
     Input.type = INPUT_MOUSE;
@@ -64,6 +65,7 @@ void InputUtils::mouseLeftRelease()
 {
 #if defined(Q_WS_X11)
     XTestFakeButtonEvent( QX11Info::display(), 1, false, CurrentTime );
+    XFlush( QX11Info::display() );
 #elif defined(Q_WS_WIN)
     INPUT Input={0};
     Input.type = INPUT_MOUSE;
@@ -84,6 +86,15 @@ void InputUtils::keyWrite( const QString & string )
         keyClickKeysym( string.at( i ).toLatin1() );
 }
 
+#if defined(Q_WS_X11)
+static void xSendScanCode( Display * display, unsigned int keyCode )
+{
+    XTestFakeKeyEvent( display, keyCode, true, CurrentTime );
+    XTestFakeKeyEvent( display, keyCode, false, CurrentTime );
+    XFlush( display );
+}
+#endif
+
 void InputUtils::keyClickKeysym( char latin1 )
 {
 #if defined(Q_WS_X11)
@@ -97,9 +108,26 @@ void InputUtils::keyClickKeysym( char latin1 )
             return;
         }
     }
-    XTestFakeKeyEvent( display, keyCode, true, CurrentTime );
-    XTestFakeKeyEvent( display, keyCode, false, CurrentTime );
+    xSendScanCode( display, keyCode );
 #else
     qWarning( "InputUtils::keyClick: notImplemented()");
+#endif
+}
+
+void InputUtils::keyClickSpecial( int qtKeyCode )
+{
+#if defined(Q_WS_X11)
+    Display * display = QX11Info::display();
+    switch ( qtKeyCode ) {
+        case Qt::Key_Control:
+            xSendScanCode( display, XKeysymToKeycode( display, KS_X11_CTRL_L ) );
+            break;
+
+        default:
+            qWarning( "InputUtils::keyClickSpecial(X11): cannot get keycode of special qtkey '%d', please provide the conversion.", qtKeyCode );
+            break;
+    }
+#else
+    qWarning( "InputUtils::keyClickSpecial: notImplemented()");
 #endif
 }

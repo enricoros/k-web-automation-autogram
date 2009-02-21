@@ -20,7 +20,11 @@
 #include "GameState.h"
 
 #include "Scrambler.h"
+#include "Capture.h"
+#include "InputUtils.h"
 #include <QTimer>
+#include <unistd.h>
+#include <QDebug>
 
 GameState::GameState( Capture * capture, const QString & letters, QObject * parent )
     : QObject( parent )
@@ -30,9 +34,21 @@ GameState::GameState( Capture * capture, const QString & letters, QObject * pare
 
     // create the Scrambler
     m_scrambler = new Scrambler();
+    m_scrambler->addDictionary( "dic-it.txt" );
 
     // TEMP FOR TESTING
     QStringList words = m_scrambler->words( letters, 3, 6 );
+
+
+    InputUtils::mouseMove( m_capture->geometry().center() );
+    InputUtils::mouseLeftClick();
+    usleep( 200 * 1000 );
+    int count = words.size();
+    for ( int i = 0; i < count; i++ ) {
+        InputUtils::keyWrite( words.at( i ) + '\n' );
+        usleep( 200 * 1000 );
+    }
+    InputUtils::keyClickSpecial( Qt::Key_Control );
 
     QTimer::singleShot( 3000, this, SLOT(slotTemp()) );
 }

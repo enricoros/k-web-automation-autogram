@@ -30,7 +30,6 @@ QStringList permute( const QString & str, int l );
 
 Scrambler::Scrambler()
 {
-    addDictionary( "v1.txt" );
 }
 
 Scrambler::~Scrambler()
@@ -64,7 +63,6 @@ QStringList Scrambler::words( const QString & base, int min, int max )
                 res.append( s );
         }
     }
-qDebug() << res;
     return res;
 }
 
