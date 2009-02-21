@@ -18,13 +18,22 @@
  ***************************************************************************/
 
 #include "GameState.h"
+
+#include "Scrambler.h"
 #include <QTimer>
 
-GameState::GameState( Capture * capture, QObject * parent )
+GameState::GameState( Capture * capture, const QString & letters, QObject * parent )
     : QObject( parent )
     , m_capture( capture )
 {
     qWarning( "<GAME>" );
+
+    // create the Scrambler
+    m_scrambler = new Scrambler();
+
+    // TEMP FOR TESTING
+    QStringList words = m_scrambler->words( letters, 3, 6 );
+
     QTimer::singleShot( 3000, this, SLOT(slotTemp()) );
 }
 
@@ -32,6 +41,8 @@ GameState::~GameState()
 {
     // don't delete m_capture, since it's external
     qWarning( "</GAME>" );
+
+    delete m_scrambler;
 }
 
 void GameState::slotTemp()

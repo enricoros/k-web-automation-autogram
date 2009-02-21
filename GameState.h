@@ -22,12 +22,13 @@
 
 #include <QObject>
 class Capture;
+class Scrambler;
 
 class GameState : public QObject
 {
     Q_OBJECT
     public:
-        GameState( Capture * capture, QObject * parent );
+        GameState( Capture * capture, const QString & letters, QObject * parent );
         ~GameState();
 
     Q_SIGNALS:
@@ -35,6 +36,7 @@ class GameState : public QObject
 
     private:
         Capture * m_capture;
+        Scrambler * m_scrambler;
 
     private Q_SLOTS:
         void slotTemp();

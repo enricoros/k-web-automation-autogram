@@ -42,7 +42,6 @@ class AppWidget : public QWidget
         Ui::AppWidgetClass * ui;
         QSettings * m_settings;
         Capture * m_capture;
-        Scrambler * m_scrambler;
         GameState * m_game;
 
     private Q_SLOTS:
@@ -50,7 +49,6 @@ class AppWidget : public QWidget
         void on_btnChallenge_toggled( bool checked );
         void on_btnLearn1_toggled( bool checked );
         void on_btnLearn2_toggled( bool checked );
-        void on_letters_textChanged( const QString & string );
         void slotOnTopChanged();
         void slotCapParamsChanged();
         void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );

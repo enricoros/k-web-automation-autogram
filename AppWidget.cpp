@@ -43,7 +43,6 @@ AppWidget::AppWidget(QWidget *parent)
     , m_settings( new QSettings() )
 #endif
     , m_capture( 0 )
-    , m_scrambler( 0 )
     , m_game( 0 )
 {
     // create ui
@@ -83,9 +82,6 @@ AppWidget::AppWidget(QWidget *parent)
     buttGroup->addButton( ui->btnLearn2 );
     slotOnTopChanged();
 
-    // create the Scrambler
-    m_scrambler = new Scrambler();
-
     // create the capture
     m_capture = new Capture( this );
     connect( m_capture, SIGNAL(gotPixmap(const QPixmap &, const QPoint &)),
@@ -101,7 +97,6 @@ AppWidget::~AppWidget()
     saveSettings();
     delete m_settings;
     delete m_game;
-    delete m_scrambler;
     delete m_capture;
     delete ui;
 }
@@ -147,7 +142,7 @@ void AppWidget::on_btnGame_toggled( bool checked )
     delete m_game;
     m_game = 0;
     if ( checked )
-        m_game = new GameState( m_capture, this );
+        m_game = new GameState( m_capture, ui->letters->text(), this );
 }
 
 void AppWidget::on_btnChallenge_toggled( bool checked )
@@ -164,11 +159,3 @@ void AppWidget::on_btnLearn2_toggled( bool checked )
 {
     qWarning("%s %d", __PRETTY_FUNCTION__, checked);
 }
-
-void AppWidget::on_letters_textChanged( const QString & text )
-{
-    // TEMP FOR TESTING
-    QStringList words = m_scrambler->allWords( text, 3, 6 );
-    ui->words->appendPlainText( words.join( "," ) );
-}
-

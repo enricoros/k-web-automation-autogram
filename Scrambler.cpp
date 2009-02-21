@@ -18,9 +18,81 @@
  ***************************************************************************/
 
 #include "Scrambler.h"
+
+#include <QFile>
+#include <QTextStream>
+
 #include <QDebug>
 
 #define notImplemented() qDebug("%s %s not implemented", __FILE__, __FUNCTION__);
+
+QStringList permute( const QString & str, int l );
+
+Scrambler::Scrambler()
+{
+    addDictionary( "v1.txt" );
+}
+
+Scrambler::~Scrambler()
+{
+}
+
+void Scrambler::addDictionary( const QString & filename)
+{
+    QFile f( filename );
+    if( !f.open( QIODevice::ReadOnly ) ) {
+        qWarning( "Scrambler::addDictionary can not open %s", qPrintable(filename) );
+    }
+
+    QTextStream s( &f );
+    while( !s.atEnd() ) {
+        QString w = s.readLine();
+        QChar c = w.at( 0 );
+        QStringList & sl = m_dictionaries[ c ];
+        sl.append( w );
+    }
+}
+
+QStringList Scrambler::words( const QString & base, int min, int max )
+{
+    QStringList res;
+    QStringList all = allWords( base, min, max );
+
+    foreach( const QString & s, all ) {
+        if ( m_dictionaries.value( s.at( 0 ) ).contains( s ) ) {
+            if ( !res.contains( s ) )
+                res.append( s );
+        }
+    }
+qDebug() << res;
+    return res;
+}
+
+QStringList Scrambler::allWords( const QString & base, int min, int max )
+{
+    min = qMax( 1, min );
+    min = qMin( min, base.size() );
+    max = qMax( min, max );
+
+    QStringList r;
+    for ( int i = min; i <= max; ++i )
+        r.append( permute( base, i ) );
+
+    return r;
+}
+
+void Scrambler::setOk( const QString & word )
+{
+    notImplemented();
+}
+
+void Scrambler::setFail( const QString & word )
+{
+    notImplemented();
+}
+
+
+
 
 QStringList permute( const QString & str, int l )
 {
@@ -45,47 +117,4 @@ QStringList permute( const QString & str, int l )
     }
 
     return r;
-}
-
-
-Scrambler::Scrambler()
-{
-}
-
-Scrambler::~Scrambler()
-{
-}
-
-void Scrambler::addDictionary( const QString & filename)
-{
-    notImplemented();
-}
-
-QStringList Scrambler::words( const QString & base, int min, int max )
-{
-    notImplemented();
-    return QStringList();
-}
-
-QStringList Scrambler::allWords( const QString & base, int min, int max )
-{
-    min = qMax( 1, min );
-    min = qMin( min, base.size() );
-    max = qMax( min, max );
-
-    QStringList r;
-    for ( int i = min; i <= max; ++i )
-        r.append( permute( base, i ) );
-
-    return r;
-}
-
-void Scrambler::setOk( const QString & word )
-{
-    notImplemented();
-}
-
-void Scrambler::setFail( const QString & word )
-{
-    notImplemented();
 }
