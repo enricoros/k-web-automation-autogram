@@ -17,20 +17,14 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QtGui/QApplication>
-#include "AppWidget.h"
-#include "ocr/Ocr.h"
-#include <QDebug>
+#ifndef __OcrCompare_h__
+#define __OcrCompare_h__
 
-int main(int argc, char *argv[])
+class OcrCompare
 {
-    QApplication a(argc, argv);
-    AppWidget w;
-    w.show();
-    Ocr ocr;
-    ocr.trainFont( QFont( "Arial", 22 ) );
-    QImage aImg( "/root/a.png" );
-    OcrResult res = ocr.recognizeGlyph( aImg );
-    qWarning() << res.character << res.confidence;
-    return a.exec();
-}
+    public:
+        OcrCompare();
+};
+
+#endif
+

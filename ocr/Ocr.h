@@ -17,20 +17,39 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QtGui/QApplication>
-#include "AppWidget.h"
-#include "ocr/Ocr.h"
-#include <QDebug>
+#ifndef __Ocr_h__
+#define __Ocr_h__
 
-int main(int argc, char *argv[])
+#include <QObject>
+#include <QFont>
+#include <QImage>
+#include <QRect>
+#include <QList>
+#include <QChar>
+#include <QFontDatabase>
+class OcrGlyph;
+
+struct OcrResult {
+    QChar character;
+    double confidence;
+};
+
+class Ocr
 {
-    QApplication a(argc, argv);
-    AppWidget w;
-    w.show();
-    Ocr ocr;
-    ocr.trainFont( QFont( "Arial", 22 ) );
-    QImage aImg( "/root/a.png" );
-    OcrResult res = ocr.recognizeGlyph( aImg );
-    qWarning() << res.character << res.confidence;
-    return a.exec();
-}
+    public:
+        Ocr();
+        ~Ocr();
+
+        // train the OCR
+        void trainFont( const QFont & font, QFontDatabase::WritingSystem writingSystem = QFontDatabase::Latin );
+        void trainGlyph( const QImage & image, const QChar & character );
+        void clearTraning();
+
+        // recognize a glyph
+        OcrResult recognizeGlyph( const QImage & image, const QRect & rect = QRect() );
+
+    private:
+        QList< OcrGlyph * > m_glyphs;
+};
+
+#endif
