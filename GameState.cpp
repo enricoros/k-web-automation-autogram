@@ -49,6 +49,11 @@ GameState::~GameState()
 
 void GameState::slotPlay()
 {
+    if ( m_time.isNull() )
+        m_time.start();
+    if ( m_time.elapsed() > (60 * 60 * 1000) )
+        return;
+
     // find out the string
     QString letters;
     QImage gamePixmap = m_capture->currentPixmap().toImage();
@@ -79,7 +84,7 @@ void GameState::slotPlay()
     int count = words.size();
     for ( int i = 0; i < count; i++ ) {
         InputUtils::keyWrite( words.at( i ) + '\n' );
-        usleep( 1 * 1000 );
+        usleep( 20 * 1000 );
     }
     InputUtils::keyClickSpecial( Qt::Key_Control );
 

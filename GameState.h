@@ -21,6 +21,7 @@
 #define __GameState_h__
 
 #include <QObject>
+#include <QTime>
 class Capture;
 class Ocr;
 class Scrambler;
@@ -41,6 +42,8 @@ class GameState : public QObject
         Capture * m_capture;
         Ocr * m_ocr;
         Scrambler * m_scrambler;
+        QTime m_time;
+
 
     private Q_SLOTS:
         void slotPlay();
