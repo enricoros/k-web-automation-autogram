@@ -41,6 +41,71 @@ struct OcrGlyph {
 // CORE FUNCTIONS
 static QImage trimImage( const QImage & image )
 {
+    // find TOP
+    int W = image.width();
+    int H = image.height();
+    int left = 0, top = 0, right = W - 1, bottom = H - 1;
+
+    // find -left- margin
+    bool blank = true;
+    while ( blank && left < W ) {
+        for ( int y = 0; y < H; y++ ) {
+            if ( qGray( image.pixel( left, y ) ) < 32 ) {
+                blank = false;
+                break;
+            }
+        }
+        if ( blank )
+            left++;
+    }
+
+    // find -top- margin
+    blank = true;
+    while ( blank && top < H ) {
+        for ( int x = 0; x < W; x++ ) {
+            if ( qGray( image.pixel( x, top ) ) < 32 ) {
+                blank = false;
+                break;
+            }
+        }
+        if ( blank )
+            top++;
+    }
+
+    // find -right- margin
+    blank = true;
+    while ( blank && right >= 0 ) {
+        for ( int y = 0; y < H; y++ ) {
+            if ( qGray( image.pixel( right, y ) ) < 32 ) {
+                blank = false;
+                break;
+            }
+        }
+        if ( blank )
+            right--;
+    }
+
+    // find -bottom- margin
+    blank = true;
+    while ( blank && bottom >= 0 ) {
+        for ( int x = 0; x < W; x++ ) {
+            if ( qGray( image.pixel( x, bottom ) ) < 32 ) {
+                blank = false;
+                break;
+            }
+        }
+        if ( blank )
+            bottom--;
+    }
+
+    // ok: return cropped image
+    W = right - left + 1;
+    H = bottom - top + 1;
+    if ( W > 0 && H > 0 )
+        return image.copy( left, top, W, H );
+
+    // invalid: return the same image
+    qWarning( "trimImage: invalid image of size %dx%d", image.width(), image.height() );
     return image;
 }
 
@@ -53,7 +118,7 @@ static OcrResult compareGlyph( const QImage & image, OcrGlyph * glyph )
     // bail out if ratios are too different
     double ratio = (float)image.width() / (float)image.height();
     double k2 = (ratio / glyph->ratio + glyph->ratio / ratio) / 2;
-    if ( k2 > 1.05 )
+    if ( k2 > 1.5 )
         return result;
 
     // ALGO
@@ -85,7 +150,7 @@ static OcrResult compareGlyph( const QImage & image, OcrGlyph * glyph )
         return result;
     float KX = sqrt( (float)error / (254.0 * (float)analyzed) );
 
-    if ( glyph->character == '0' || glyph->character == 'O' ) {
+/*    if ( glyph->character == 'S' ) {
         QLabel * label = new QLabel();
         label->setPixmap( QPixmap::fromImage( image ) );
         label->show();
@@ -93,10 +158,10 @@ static OcrResult compareGlyph( const QImage & image, OcrGlyph * glyph )
         label = new QLabel();
         label->setPixmap( QPixmap::fromImage( glyphImage ) );
         label->show();
-    }
+    }*/
 
     result.confidence = 1.0 - KX;
-    qWarning() << result.confidence << result.character << pixels << analyzed;
+    //qWarning() << result.confidence << result.character << pixels << analyzed;
     return result;
 }
 
@@ -123,8 +188,8 @@ void Ocr::trainFont( const QFont & font, QFontDatabase::WritingSystem writingSys
     //for ( int i = 33; i <= 47; i++ )
     //    chars.append( QChar( i ) );
     // numbers
-    for ( int i = 48; i <= 57; i++ )
-        chars.append( QChar( i ) );
+    //for ( int i = 48; i <= 57; i++ )
+    //    chars.append( QChar( i ) );
     // symbols :;<=>?@
     //for ( int i = 58; i <= 64; i++ )
     //    chars.append( QChar( i ) );
@@ -135,8 +200,8 @@ void Ocr::trainFont( const QFont & font, QFontDatabase::WritingSystem writingSys
     //for ( int i = 91; i <= 96; i++ )
     //    chars.append( QChar( i ) );
     // lowercase letters
-    for ( int i = 97; i <= 122; i++ )
-        chars.append( QChar( i ) );
+    //for ( int i = 97; i <= 122; i++ )
+    //    chars.append( QChar( i ) );
     // symbols {|}~
     //for ( int i = 123; i <= 126; i++ )
     //    chars.append( QChar( i ) );

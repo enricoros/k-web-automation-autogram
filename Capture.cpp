@@ -68,6 +68,11 @@ int Capture::frequency() const
     return m_fps;
 }
 
+QPixmap Capture::currentPixmap() const
+{
+    return m_pixmap;
+}
+
 void Capture::timerEvent( QTimerEvent * event )
 {
     if ( event->timerId() != m_timer.timerId() || m_geometry.isNull() )
@@ -76,7 +81,7 @@ void Capture::timerEvent( QTimerEvent * event )
     if ( !m_enabled )
         return;
 
-    QPixmap grabbedPixmap = QPixmap::grabWindow(
+    m_pixmap = QPixmap::grabWindow(
 #if defined(Q_WS_X11)
             QX11Info::appRootWindow(),
 #else
@@ -85,5 +90,5 @@ void Capture::timerEvent( QTimerEvent * event )
             m_geometry.left(), m_geometry.top(), m_geometry.width(), m_geometry.height() );
 
 
-    emit gotPixmap( grabbedPixmap, QCursor::pos() - QPoint( m_geometry.topLeft() ) );
+    emit gotPixmap( m_pixmap, QCursor::pos() - QPoint( m_geometry.topLeft() ) );
 }

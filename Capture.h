@@ -24,6 +24,7 @@
 #include <QBasicTimer>
 #include <QList>
 #include <QImage>
+#include <QPixmap>
 
 class Capture : public QObject
 {
@@ -38,6 +39,8 @@ class Capture : public QObject
         void setFrequency( int fps );
         int frequency() const;
 
+        QPixmap currentPixmap() const;
+
     Q_SIGNALS:
         void gotPixmap( const QPixmap & pixmap, const QPoint & cursorPos );
 
@@ -46,6 +49,7 @@ class Capture : public QObject
 
     private:
         QBasicTimer m_timer;
+        QPixmap m_pixmap;
         QRect m_geometry;
         bool m_enabled;
         int m_fps;

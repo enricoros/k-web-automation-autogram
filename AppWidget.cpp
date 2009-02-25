@@ -22,10 +22,10 @@
 #include "Capture.h"
 #include "GameState.h"
 #include "InputUtils.h"
-#include "Scrambler.h"
 #include <QApplication>
 #include <QButtonGroup>
 #include <QDesktopWidget>
+#include <QPainter>
 #include <QPixmap>
 #include <QPoint>
 #include <QSettings>
@@ -48,6 +48,8 @@ AppWidget::AppWidget(QWidget *parent)
     // create ui
     ui->setupUi(this);
     QDesktopWidget dw;
+    ui->display1->setFixedSize( 64, 64 );
+    ui->display2->setFixedSize( 320, 41 );
     ui->left->setMaximum( dw.width() );
     ui->top->setMaximum( dw.height() );
     ui->width->setMaximum( dw.width() );
@@ -131,8 +133,18 @@ void AppWidget::slotCapParamsChanged()
 
 void AppWidget::slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor )
 {
-    // TODO
-    //qWarning("GOTCHA!");
+    QPixmap pix = pixmap;
+    QPainter pp( &pix );
+    pp.setPen( Qt::red );
+    pp.drawRect( 121, 248, 35 - 1, 37 - 1 );
+    pp.drawRect( 175, 248, 35 - 1, 37 - 1 );
+    pp.drawRect( 230, 248, 35 - 1, 37 - 1 );
+    pp.drawRect( 284, 248, 35 - 1, 37 - 1 );
+    pp.drawRect( 338, 248, 35 - 1, 37 - 1 );
+    pp.drawRect( 393, 248, 35 - 1, 37 - 1 );
+    pp.end();
+    ui->display1->setPixmap( pix.copy( 0, 0, 16, 16 ).scaled( 64, 64, Qt::IgnoreAspectRatio, Qt::FastTransformation ) );
+    ui->display2->setPixmap( pix.copy( 114, 245, 320, 41 ) );
 }
 
 void AppWidget::on_btnGame_toggled( bool checked )

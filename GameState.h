@@ -22,6 +22,7 @@
 
 #include <QObject>
 class Capture;
+class Ocr;
 class Scrambler;
 
 class GameState : public QObject
@@ -36,6 +37,7 @@ class GameState : public QObject
 
     private:
         Capture * m_capture;
+        Ocr * m_ocr;
         Scrambler * m_scrambler;
 
     private Q_SLOTS:

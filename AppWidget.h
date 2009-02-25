@@ -26,7 +26,6 @@ class QPoint;
 class QSettings;
 class Capture;
 class GameState;
-class Scrambler;
 
 namespace Ui { class AppWidgetClass; }
 
