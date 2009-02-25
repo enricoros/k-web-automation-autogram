@@ -22,6 +22,7 @@
 #include "Capture.h"
 #include "GameState.h"
 #include "InputUtils.h"
+#include "ocr/Ocr.h"
 #include <QApplication>
 #include <QButtonGroup>
 #include <QDesktopWidget>
@@ -29,7 +30,9 @@
 #include <QPixmap>
 #include <QPoint>
 #include <QSettings>
+#include <QDirIterator>
 #include <QTimer>
+#include <QDebug>
 
 #define DEFAULT_WIDTH 640
 #define DEFAULT_HEIGHT 480
@@ -44,6 +47,7 @@ AppWidget::AppWidget(QWidget *parent)
 #endif
     , m_capture( 0 )
     , m_game( 0 )
+    , m_ocr( 0 )
 {
     // create ui
     ui->setupUi(this);
@@ -90,6 +94,24 @@ AppWidget::AppWidget(QWidget *parent)
              this, SLOT(slotProcessPixmap(const QPixmap &, const QPoint &)) );
     slotCapParamsChanged();
 
+    // create the OCR, train with font and saved glyphs
+    m_ocr = new Ocr();
+
+    QFont font( "Arial", 32 );
+    font.setBold( true );
+    m_ocr->trainFont( font );
+
+    QDirIterator dIt( QCoreApplication::applicationDirPath(), QStringList() << "glyph_*.png", QDir::Files );
+    while ( dIt.hasNext() ) {
+        QString fileName = dIt.next();
+        QChar character = fileName.right( 5 ).at( 0 );
+        QImage image( fileName, "PNG" );
+        if ( !image.isNull() ) {
+            m_ocr->trainGlyph( image, character );
+            qWarning() << "loaded" << fileName << character;
+        }
+    }
+
     // ### TEMP
     m_capture->setEnabled( true );
 }
@@ -98,6 +120,7 @@ AppWidget::~AppWidget()
 {
     saveSettings();
     delete m_settings;
+    delete m_ocr;
     delete m_game;
     delete m_capture;
     delete ui;
@@ -131,7 +154,7 @@ void AppWidget::slotCapParamsChanged()
     m_capture->setFrequency( ui->frequency->value() );
 }
 
-void AppWidget::slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor )
+void AppWidget::slotProcessPixmap( const QPixmap & pixmap, const QPoint & /*cursor*/ )
 {
     QPixmap pix = pixmap;
     QPainter pp( &pix );
@@ -154,7 +177,7 @@ void AppWidget::on_btnGame_toggled( bool checked )
     delete m_game;
     m_game = 0;
     if ( checked )
-        m_game = new GameState( m_capture, ui->letters->text(), this );
+        m_game = new GameState( ui, m_capture, m_ocr, this );
 }
 
 void AppWidget::on_btnChallenge_toggled( bool checked )
@@ -170,4 +193,21 @@ void AppWidget::on_btnLearn1_toggled( bool checked )
 void AppWidget::on_btnLearn2_toggled( bool checked )
 {
     qWarning("%s %d", __PRETTY_FUNCTION__, checked);
+}
+
+void AppWidget::on_trainButton_clicked()
+{
+    // find out the string
+    QString letters = ui->trainLetters->text();
+    QImage gamePixmap = m_capture->currentPixmap().toImage();
+    int pixLetters[ 6 ] = { 121, 175, 230, 284, 338, 393 };
+    int pixLetterTop = 248;
+    int pixLetterWidth = 35;
+    int pixLetterHeight = 37;
+    for ( int i = 0; i < 6; i++ ) {
+        QImage letter = gamePixmap.copy( pixLetters[ i ], pixLetterTop, pixLetterWidth, pixLetterHeight );
+        QChar character = letters.at( i );
+        letter.save( QString( "glyph_%1.png" ).arg( character.toLatin1() ), "PNG" );
+        m_ocr->trainGlyph( letter, character );
+    }
 }

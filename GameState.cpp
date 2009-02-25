@@ -26,27 +26,32 @@
 #include <QTimer>
 #include <unistd.h>
 #include <QDebug>
-#include <QLabel>
+#include "ui_AppWidget.h"
 
-GameState::GameState( Capture * capture, const QString & /*letters*/, QObject * parent )
+GameState::GameState( Ui::AppWidgetClass * ui, Capture * capture, Ocr * ocr, QObject * parent )
     : QObject( parent )
+    , m_ui( ui )
     , m_capture( capture )
-    , m_ocr( new Ocr() )
+    , m_ocr( ocr )
 {
-    qWarning( "<GAME>" );
-
     // create the Scrambler
     m_scrambler = new Scrambler();
     m_scrambler->addDictionary( "dic-it.txt" );
 
-    // init the Ocr
-    QFont font( "Arial", 32 );
-    font.setBold( true );
-    m_ocr->trainFont( font );
+    QTimer::singleShot( 100, this, SLOT(slotPlay()) );
+}
 
+GameState::~GameState()
+{
+    // don't delete m_capture, since it's external
+    delete m_scrambler;
+}
+
+void GameState::slotPlay()
+{
     // find out the string
     QString letters;
-    QImage gamePixmap = capture->currentPixmap().toImage();
+    QImage gamePixmap = m_capture->currentPixmap().toImage();
     int pixLetters[ 6 ] = { 121, 175, 230, 284, 338, 393 };
     int pixLetterTop = 248;
     int pixLetterWidth = 35;
@@ -58,12 +63,15 @@ GameState::GameState( Capture * capture, const QString & /*letters*/, QObject * 
             letters.append( res.character.toLower() );
         //qWarning() << res.character << res.confidence;
     }
-    QLabel * lab = new QLabel( letters );
-    lab->setFixedSize( 32, 32 );
-    lab->show();
+    m_ui->currentLetters->setText( letters );
 
     // TEMP FOR TESTING
-    QStringList words = m_scrambler->words( letters, 3, 5 );
+    QStringList words;
+    if ( m_ui->allWords->isChecked() )
+        words = m_scrambler->allWords( letters, m_ui->minLetters->value(), m_ui->maxLetters->value() );
+    else
+        words = m_scrambler->words( letters, m_ui->minLetters->value(), m_ui->maxLetters->value() );
+    m_ui->words->setPlainText( words.join( "," ) );
 
     InputUtils::mouseMove( m_capture->geometry().center() );
     InputUtils::mouseLeftClick();
@@ -71,24 +79,9 @@ GameState::GameState( Capture * capture, const QString & /*letters*/, QObject * 
     int count = words.size();
     for ( int i = 0; i < count; i++ ) {
         InputUtils::keyWrite( words.at( i ) + '\n' );
-        usleep( 20 * 1000 );
+        usleep( 1 * 1000 );
     }
     InputUtils::keyClickSpecial( Qt::Key_Control );
 
-    //QTimer::singleShot( 3000, this, SLOT(slotTemp()) );
-}
-
-GameState::~GameState()
-{
-    // don't delete m_capture, since it's external
-    qWarning( "</GAME>" );
-
-    delete m_ocr;
-    delete m_scrambler;
-}
-
-void GameState::slotTemp()
-{
-    qWarning( "<GAME> ended" );
-    emit gameEnded();
+    QTimer::singleShot( 2000, this, SLOT(slotPlay()) );
 }

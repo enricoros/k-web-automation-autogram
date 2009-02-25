@@ -26,6 +26,7 @@ class QPoint;
 class QSettings;
 class Capture;
 class GameState;
+class Ocr;
 
 namespace Ui { class AppWidgetClass; }
 
@@ -42,8 +43,10 @@ class AppWidget : public QWidget
         QSettings * m_settings;
         Capture * m_capture;
         GameState * m_game;
+        Ocr * m_ocr;
 
     private Q_SLOTS:
+        void on_trainButton_clicked();
         void on_btnGame_toggled( bool checked );
         void on_btnChallenge_toggled( bool checked );
         void on_btnLearn1_toggled( bool checked );

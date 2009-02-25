@@ -150,7 +150,8 @@ static OcrResult compareGlyph( const QImage & image, OcrGlyph * glyph )
         return result;
     float KX = sqrt( (float)error / (254.0 * (float)analyzed) );
 
-/*    if ( glyph->character == 'S' ) {
+#if 0
+    if ( glyph->character == 'R' ) {
         QLabel * label = new QLabel();
         label->setPixmap( QPixmap::fromImage( image ) );
         label->show();
@@ -158,7 +159,8 @@ static OcrResult compareGlyph( const QImage & image, OcrGlyph * glyph )
         label = new QLabel();
         label->setPixmap( QPixmap::fromImage( glyphImage ) );
         label->show();
-    }*/
+    }
+#endif
 
     result.confidence = 1.0 - KX;
     //qWarning() << result.confidence << result.character << pixels << analyzed;

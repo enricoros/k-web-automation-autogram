@@ -24,24 +24,26 @@
 class Capture;
 class Ocr;
 class Scrambler;
+namespace Ui { class AppWidgetClass; }
 
 class GameState : public QObject
 {
     Q_OBJECT
     public:
-        GameState( Capture * capture, const QString & letters, QObject * parent );
+        GameState( Ui::AppWidgetClass * ui, Capture * capture, Ocr * ocr, QObject * parent );
         ~GameState();
 
     Q_SIGNALS:
         void gameEnded();
 
     private:
+        Ui::AppWidgetClass * m_ui;
         Capture * m_capture;
         Ocr * m_ocr;
         Scrambler * m_scrambler;
 
     private Q_SLOTS:
-        void slotTemp();
+        void slotPlay();
 };
 
 #endif // __GameState_h__
