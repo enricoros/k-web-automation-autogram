@@ -38,8 +38,10 @@
 #define KS_X11_DOWN         0xff54
 #elif defined(Q_WS_WIN)
 #include <windows.h>
+#elif defined(Q_WS_MAC)
+#import <ApplicationServices/ApplicationServices.h>
 #else
-#warning leftClick not implemented for this Windowing System
+#warning InputUtils not implemented for this Windowing System
 #endif
 
 void InputUtils::mouseLeftClick()
@@ -58,6 +60,21 @@ void InputUtils::mouseLeftPress()
     Input.type = INPUT_MOUSE;
     Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
     ::SendInput( 1, &Input, sizeof(INPUT) );
+#elif defined(Q_WS_MAC)
+    QPoint currPos = QCursor::pos();
+    // The data structure CGPoint represents a point in a two-dimensional
+    // coordinate system.  Here, X and Y distance from upper left, in pixels.
+    //
+    CGPoint pt;
+    pt.x = currPos.x();
+    pt.y = currPos.y();
+    // CGPostMouseEvent( CGPoint        mouseCursorPosition,
+    //                   boolean_t      updateMouseCursorPosition,
+    //                   CGButtonCount  buttonCount,
+    //                   boolean_t      mouseButtonDown, ... )
+    // So, we feed coordinates to CGPostMouseEvent, put the mouse there,
+    // then click and release.
+    CGPostMouseEvent( pt, 1, 1, 1 );
 #endif
 }
 
@@ -71,6 +88,12 @@ void InputUtils::mouseLeftRelease()
     Input.type = INPUT_MOUSE;
     Input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
     ::SendInput( 1, &Input, sizeof(INPUT) );
+#elif defined(Q_WS_MAC)
+    CGPoint pt;
+    QPoint currPos = QCursor::pos();
+    pt.x = currPos.x();
+    pt.y = currPos.y();
+    CGPostMouseEvent( pt, 1, 1, 0 );
 #endif
 }
 
