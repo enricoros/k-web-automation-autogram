@@ -1,7 +1,7 @@
 /***************************************************************************
- * Copyright (c) 2009 FAGAS                                                *
- *         2009 Koral <koral@email.it>                                     *
- *         2009 Skaal <skaal.sl@gmail.com>                                 *
+ * Copyright (c) 2009 Enrico Ros                                           *
+ *         2009 Enrico Ros <enrico.ros@email.it>                           *
+ *         2009 Alberto Scarpa <skaal.sl@gmail.com>                        *
  *                                                                         *
  * Permission is hereby granted, free of charge, to any person             *
  * obtaining a copy of this software and associated documentation          *

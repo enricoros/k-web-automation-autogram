@@ -1,7 +1,7 @@
 /***************************************************************************
- * Copyright (c) 2009 FAGAS                                                *
- *         2009 Koral <koral@email.it>                                     *
- *         2009 Skaal <skaal.sl@gmail.com>                                 *
+ * Copyright (c) 2009 Enrico Ros                                           *
+ *         2009 Enrico Ros <enrico.ros@email.it>                           *
+ *         2009 Alberto Scarpa <skaal.sl@gmail.com>                        *
  *                                                                         *
  * Permission is hereby granted, free of charge, to any person             *
  * obtaining a copy of this software and associated documentation          *
@@ -101,7 +101,7 @@ AppWidget::AppWidget(QWidget *parent)
     font.setBold( true );
     m_ocr->trainFont( font );
 
-    QDirIterator dIt( QCoreApplication::applicationDirPath(), QStringList() << "glyph_*.png", QDir::Files );
+    QDirIterator dIt( QCoreApplication::applicationDirPath() + QDir::separator() + "wc-glyphs", QStringList() << "glyph_*.png", QDir::Files );
     while ( dIt.hasNext() ) {
         QString fileName = dIt.next();
         QChar character = fileName.right( 5 ).at( 0 );
@@ -207,7 +207,7 @@ void AppWidget::on_trainButton_clicked()
     for ( int i = 0; i < 6; i++ ) {
         QImage letter = gamePixmap.copy( pixLetters[ i ], pixLetterTop, pixLetterWidth, pixLetterHeight );
         QChar character = letters.at( i );
-        letter.save( QString( "glyph_%1.png" ).arg( character.toLatin1() ), "PNG" );
+        letter.save( QString( "wc-glyphs/glyph_%1.png" ).arg( character.toLatin1() ), "PNG" );
         m_ocr->trainGlyph( letter, character );
     }
 }
