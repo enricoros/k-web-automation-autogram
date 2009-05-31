@@ -17,68 +17,90 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "GameState.h"
+#include "WCGame.h"
 
 #include "Scrambler.h"
-#include "Capture.h"
+#include "ScreenCapture.h"
 #include "InputUtils.h"
 #include "ocr/Ocr.h"
-#include <QTimer>
-#include <unistd.h>
-#include <QDebug>
 #include "ui_AppWidget.h"
+#include <QTimer>
+#include <QDebug>
+#include <QPainter>
+#include <unistd.h>
 
-GameState::GameState( Ui::AppWidgetClass * ui, Capture * capture, Ocr * ocr, QObject * parent )
-    : QObject( parent )
-    , m_ui( ui )
-    , m_capture( capture )
-    , m_ocr( ocr )
+//static const int WC_CAP_L = 114;
+//static const int WC_CAP_T = 245;
+static const int WC_BASELINE_H[] = { 7, 61, 116, 170, 224, 279 };
+static const int WC_BASELINE_V[] = { 3,  3,   3,   3,   3,   3 };
+static const int WC_LETTER_W = 35;
+static const int WC_LETTER_H = 37;
+
+WCGame::WCGame( QObject * parent )
+    : AbstractGame( parent )
 {
     // create the Scrambler
     m_scrambler = new Scrambler();
     m_scrambler->addDictionary( "dic-it.txt" );
-
-    QTimer::singleShot( 100, this, SLOT(slotPlay()) );
 }
 
-GameState::~GameState()
+WCGame::~WCGame()
 {
-    // don't delete m_capture, since it's external
     delete m_scrambler;
 }
 
-void GameState::slotPlay()
+QPixmap WCGame::highlightPixmap( const QPixmap & pixmap ) const
+{
+    QPixmap pix = pixmap;
+    QPainter pp( &pix );
+    pp.setPen( Qt::red );
+    for ( int i = 0; i < 6; i++ )
+        pp.drawRect( WC_BASELINE_H[ i ], WC_BASELINE_V[ i ], WC_LETTER_W - 1, WC_LETTER_H - 1 );
+    pp.end();
+    return pix;
+}
+
+void WCGame::train( Ocr * ocr, QString lettersText, const QImage & gamePixmap ) const
+{
+    for ( int i = 0; i < 6; i++ ) {
+        QImage letterImage = gamePixmap.copy( WC_BASELINE_H[ i ], WC_BASELINE_V[ i ], WC_LETTER_W, WC_LETTER_H );
+        QChar character = lettersText.at( i );
+        letterImage.save( QString( "wc-glyphs/glyph_%1.png" ).arg( character.toLatin1() ), "PNG" );
+        ocr->trainGlyph( letterImage, character );
+    }
+}
+
+void WCGame::run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const Ocr * ocr )
 {
     if ( m_time.isNull() )
         m_time.start();
     if ( m_time.elapsed() > (60 * 60 * 1000) )
         return;
 
-    // find out the string
+    // OCR screen -> 6Chars
     QString letters;
-    QImage gamePixmap = m_capture->currentPixmap().toImage();
-    int pixLetters[ 6 ] = { 121, 175, 230, 284, 338, 393 };
-    int pixLetterTop = 248;
-    int pixLetterWidth = 35;
-    int pixLetterHeight = 37;
+    QImage gamePixmap = capture->lastPixmap().toImage();
     for ( int i = 0; i < 6; i++ ) {
-        QImage letter = gamePixmap.copy( pixLetters[ i ], pixLetterTop, pixLetterWidth, pixLetterHeight );
-        OcrResult res = m_ocr->recognizeGlyph( letter );
+        QImage letterImage = gamePixmap.copy( WC_BASELINE_H[ i ], WC_BASELINE_V[ i ], WC_LETTER_W, WC_LETTER_H );
+        OcrResult res = ocr->recognizeGlyph( letterImage );
         if ( res.confidence > 0.1 )
             letters.append( res.character.toLower() );
         //qWarning() << res.character << res.confidence;
     }
-    m_ui->currentLetters->setText( letters );
+    ui->currentLetters->setText( letters );
+    if ( letters.length() != 6 )
+        return;
 
-    // TEMP FOR TESTING
+    // Do Anagram
     QStringList words;
-    if ( m_ui->allWords->isChecked() )
-        words = m_scrambler->allWords( letters, m_ui->minLetters->value(), m_ui->maxLetters->value() );
+    if ( ui->allWords->isChecked() )
+        words = m_scrambler->allWords( letters, ui->minLetters->value(), ui->maxLetters->value() );
     else
-        words = m_scrambler->words( letters, m_ui->minLetters->value(), m_ui->maxLetters->value() );
-    m_ui->words->setPlainText( words.join( "," ) );
+        words = m_scrambler->words( letters, ui->minLetters->value(), ui->maxLetters->value() );
+    ///ui->words->setPlainText( words.join( "," ) );
 
-    InputUtils::mouseMove( m_capture->geometry().center() );
+    // Write Words
+    InputUtils::mouseMove( capture->geometry().center() );
     InputUtils::mouseLeftClick();
     usleep( 200 * 1000 );
     int count = words.size();
@@ -87,6 +109,4 @@ void GameState::slotPlay()
         usleep( 20 * 1000 );
     }
     InputUtils::keyClickSpecial( Qt::Key_Control );
-
-    QTimer::singleShot( 2000, this, SLOT(slotPlay()) );
 }

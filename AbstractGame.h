@@ -17,78 +17,32 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "Capture.h"
-#include <QCoreApplication>
-#include <QDirIterator>
-#include <QImage>
-#include <QTimerEvent>
-#ifdef Q_WS_X11
-#include <QX11Info>
-#else
-#include <QApplication>
-#endif
-#include <QDesktopWidget>
+#ifndef __AbstractGame_h__
+#define __AbstractGame_h__
+
+#include <QObject>
 #include <QPixmap>
+class Ocr;
+class ScreenCapture;
+namespace Ui { class AppWidgetClass; }
 
-Capture::Capture( QObject * parent )
-    : QObject( parent )
-    , m_enabled( false )
-    , m_fps( 0 )
+class AbstractGame : public QObject
 {
-}
+    Q_OBJECT
+    public:
+        AbstractGame( QObject * parent = 0 );
+        virtual ~AbstractGame();
 
-void Capture::setEnabled( bool enabled )
-{
-    m_enabled = enabled;
-}
+        // utility functions
+        virtual QPixmap highlightPixmap( const QPixmap & pixmap ) const = 0;
+        virtual void train( Ocr * ocr, QString lettersText, const QImage & gamePixmap ) const = 0;
 
-bool Capture::enabled() const
-{
-    return m_enabled;
-}
+        // game logic
+        // ...
+        virtual void run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const Ocr * ocr ) = 0;
 
-void Capture::setGeometry( const QRect & geometry )
-{
-    m_geometry = geometry;
-}
+    Q_SIGNALS:
+        void gameEnded();
+};
 
-QRect Capture::geometry() const
-{
-    return m_geometry;
-}
-
-void Capture::setFrequency( int fps )
-{
-    m_fps = fps;
-    m_timer.start( 1000 / m_fps, this );
-}
-
-int Capture::frequency() const
-{
-    return m_fps;
-}
-
-QPixmap Capture::currentPixmap() const
-{
-    return m_pixmap;
-}
-
-void Capture::timerEvent( QTimerEvent * event )
-{
-    if ( event->timerId() != m_timer.timerId() || m_geometry.isNull() )
-        return QObject::timerEvent( event );
-
-    if ( !m_enabled )
-        return;
-
-    m_pixmap = QPixmap::grabWindow(
-#if defined(Q_WS_X11)
-            QX11Info::appRootWindow(),
-#else
-            QApplication::desktop()->winId(),
-#endif
-            m_geometry.left(), m_geometry.top(), m_geometry.width(), m_geometry.height() );
-
-
-    emit gotPixmap( m_pixmap, QCursor::pos() - QPoint( m_geometry.topLeft() ) );
-}
+#endif // __AbstractGame_h__

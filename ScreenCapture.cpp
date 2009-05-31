@@ -17,42 +17,77 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef __Capture_h__
-#define __Capture_h__
-
-#include <QObject>
-#include <QBasicTimer>
-#include <QList>
+#include "ScreenCapture.h"
+#include <QCoreApplication>
+#include <QDirIterator>
 #include <QImage>
+#include <QTimerEvent>
+#ifdef Q_WS_X11
+#include <QX11Info>
+#else
+#include <QApplication>
+#endif
+#include <QDesktopWidget>
 #include <QPixmap>
 
-class Capture : public QObject
+ScreenCapture::ScreenCapture( QObject * parent )
+    : QObject( parent )
+    , m_enabled( false )
+    , m_fps( 0 )
 {
-    Q_OBJECT
-    public:
-        Capture( QObject * parent );
+}
 
-        void setEnabled( bool enabled );
-        bool enabled() const;
-        void setGeometry( const QRect & geometry );
-        QRect geometry() const;
-        void setFrequency( int fps );
-        int frequency() const;
+void ScreenCapture::setEnabled( bool enabled )
+{
+    m_enabled = enabled;
+}
 
-        QPixmap currentPixmap() const;
+bool ScreenCapture::enabled() const
+{
+    return m_enabled;
+}
 
-    Q_SIGNALS:
-        void gotPixmap( const QPixmap & pixmap, const QPoint & cursorPos );
+void ScreenCapture::setGeometry( const QRect & geometry )
+{
+    m_geometry = geometry;
+}
 
-    protected:
-        void timerEvent( QTimerEvent * event );
+QRect ScreenCapture::geometry() const
+{
+    return m_geometry;
+}
 
-    private:
-        QBasicTimer m_timer;
-        QPixmap m_pixmap;
-        QRect m_geometry;
-        bool m_enabled;
-        int m_fps;
-};
+void ScreenCapture::setFrequency( int fps )
+{
+    m_fps = fps;
+    m_timer.start( 1000 / m_fps, this );
+}
 
+int ScreenCapture::frequency() const
+{
+    return m_fps;
+}
+
+QPixmap ScreenCapture::lastPixmap() const
+{
+    return m_pixmap;
+}
+
+void ScreenCapture::timerEvent( QTimerEvent * event )
+{
+    if ( event->timerId() != m_timer.timerId() || m_geometry.isNull() )
+        return QObject::timerEvent( event );
+
+    if ( !m_enabled )
+        return;
+
+    m_pixmap = QPixmap::grabWindow(
+#if defined(Q_WS_X11)
+            QX11Info::appRootWindow(),
+#else
+            QApplication::desktop()->winId(),
 #endif
+            m_geometry.left(), m_geometry.top(), m_geometry.width(), m_geometry.height() );
+
+    emit gotPixmap( m_pixmap, QCursor::pos() - QPoint( m_geometry.topLeft() ) );
+}

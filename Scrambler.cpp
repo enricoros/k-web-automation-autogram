@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright (c) 2009 Enrico Ros                                           *
+ * Copyright (c) 2009 Alberto Scarpa                                       *
  *         2009 Enrico Ros <enrico.ros@email.it>                           *
  *         2009 Alberto Scarpa <skaal.sl@gmail.com>                        *
  *                                                                         *

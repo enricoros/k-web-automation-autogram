@@ -265,7 +265,7 @@ void Ocr::clearTraning()
     m_glyphs.clear();
 }
 
-OcrResult Ocr::recognizeGlyph( const QImage & sourceImage, const QRect & __rect )
+OcrResult Ocr::recognizeGlyph( const QImage & sourceImage, const QRect & __rect ) const
 {
     // checks
     OcrResult result;

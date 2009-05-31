@@ -17,16 +17,13 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QtGui/QApplication>
-#include "AppWidget.h"
+#include "AbstractGame.h"
 
-int main(int argc, char *argv[])
+AbstractGame::AbstractGame( QObject * parent )
+    : QObject( parent )
 {
-    QApplication a(argc, argv);
-    a.setOrganizationName("Enrico Ros");
-    a.setApplicationName("AutoGram");
-    a.setApplicationVersion("1.0");
-    AppWidget w;
-    w.show();
-    return a.exec();
+}
+
+AbstractGame::~AbstractGame()
+{
 }

@@ -17,16 +17,30 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QtGui/QApplication>
-#include "AppWidget.h"
+#ifndef __WCGame_h__
+#define __WCGame_h__
 
-int main(int argc, char *argv[])
+#include "AbstractGame.h"
+#include <QTime>
+class Scrambler;
+
+class WCGame : public AbstractGame
 {
-    QApplication a(argc, argv);
-    a.setOrganizationName("Enrico Ros");
-    a.setApplicationName("AutoGram");
-    a.setApplicationVersion("1.0");
-    AppWidget w;
-    w.show();
-    return a.exec();
-}
+    public:
+        WCGame( QObject * parent );
+        ~WCGame();
+
+        // ::AbstractGame
+        QPixmap highlightPixmap( const QPixmap & pixmap ) const;
+        void train( Ocr * ocr, QString lettersText, const QImage & gamePixmap ) const;
+        void run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const Ocr * ocr );
+
+    Q_SIGNALS:
+        void gameEnded();
+
+    private:
+        Scrambler * m_scrambler;
+        QTime m_time;
+};
+
+#endif

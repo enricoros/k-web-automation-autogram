@@ -24,9 +24,10 @@
 class QPixmap;
 class QPoint;
 class QSettings;
-class Capture;
-class GameState;
+class ScreenCapture;
+class AbstractGame;
 class Ocr;
+class RegionWidget;
 
 namespace Ui { class AppWidgetClass; }
 
@@ -37,20 +38,26 @@ class AppWidget : public QWidget
         AppWidget(QWidget *parent = 0);
         ~AppWidget();
 
+    protected:
+        void mousePressEvent(QMouseEvent * event);
+        void mouseMoveEvent(QMouseEvent * event);
+        void mouseReleaseEvent(QMouseEvent * event);
+
     private:
         void saveSettings();
         Ui::AppWidgetClass * ui;
         QSettings * m_settings;
-        Capture * m_capture;
-        GameState * m_game;
+        AbstractGame * m_game;
+        ScreenCapture * m_capture;
         Ocr * m_ocr;
+        RegionWidget * m_pickingRegion;
 
     private Q_SLOTS:
+        void on_gameNo_toggled(bool checked);
+        void on_gameWc_toggled(bool checked);
+        void on_gameWcLearn_toggled(bool checked);
+        void on_pickRegionButton_clicked();
         void on_trainButton_clicked();
-        void on_btnGame_toggled( bool checked );
-        void on_btnChallenge_toggled( bool checked );
-        void on_btnLearn1_toggled( bool checked );
-        void on_btnLearn2_toggled( bool checked );
         void slotOnTopChanged();
         void slotCapParamsChanged();
         void slotProcessPixmap( const QPixmap & pixmap, const QPoint & cursor );

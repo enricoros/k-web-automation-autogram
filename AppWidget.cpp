@@ -18,14 +18,15 @@
  ***************************************************************************/
 
 #include "AppWidget.h"
-#include "ui_AppWidget.h"
-#include "Capture.h"
-#include "GameState.h"
+#include "AbstractGame.h"
 #include "InputUtils.h"
+#include "ScreenCapture.h"
+#include "WCGame.h"
 #include "ocr/Ocr.h"
+#include "ui_AppWidget.h"
 #include <QApplication>
-#include <QButtonGroup>
 #include <QDesktopWidget>
+#include <QPaintEvent>
 #include <QPainter>
 #include <QPixmap>
 #include <QPoint>
@@ -34,26 +35,62 @@
 #include <QTimer>
 #include <QDebug>
 
-#define DEFAULT_WIDTH 640
-#define DEFAULT_HEIGHT 480
+#define DEFAULT_WIDTH 320
+#define DEFAULT_HEIGHT 41
+
+
+class RegionWidget : public QWidget {
+    public:
+        RegionWidget() : QWidget(0, Qt::CustomizeWindowHint | Qt::FramelessWindowHint)
+        {
+            setAttribute(Qt::WA_TranslucentBackground);
+            setAttribute(Qt::WA_OpaquePaintEvent);
+            hide();
+        }
+        int rX, rY, rWidth, rHeight;
+        void setStartPos( const QPoint & pos )
+        {
+            startPos = pos;
+        }
+        void setEndPos( const QPoint & pos )
+        {
+            endPos = pos;
+            rX = qMin( startPos.x(), endPos.x() );
+            rY = qMin( startPos.y(), endPos.y() );
+            rWidth = qMax( startPos.x(), endPos.x() ) - rX + 1;
+            rHeight = qMax( startPos.y(), endPos.y() ) - rY + 1;
+            setShown( rWidth > 0 && rHeight > 0 );
+            setGeometry( rX, rY, rWidth, rHeight );
+        }
+    protected:
+        void paintEvent(QPaintEvent * event)
+        {
+            QPainter p(this);
+            p.setCompositionMode(QPainter::CompositionMode_Source);
+            p.fillRect(event->rect(), QColor(255, 0, 0, 64));
+            p.drawRect(0, 0, width() - 1, height() - 1);
+        }
+    private:
+        QPoint startPos, endPos;
+};
+
 
 AppWidget::AppWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::AppWidgetClass)
 #if defined(Q_OS_WIN)
-    , m_settings( new QSettings( "biocheat.ini", QSettings::IniFormat ) )
+    , m_settings( new QSettings( "autogram.ini", QSettings::IniFormat ) )
 #else
     , m_settings( new QSettings() )
 #endif
-    , m_capture( 0 )
     , m_game( 0 )
+    , m_capture( 0 )
     , m_ocr( 0 )
+    , m_pickingRegion( 0 )
 {
     // create ui
-    ui->setupUi(this);
+    ui->setupUi( this );
     QDesktopWidget dw;
-    ui->display1->setFixedSize( 64, 64 );
-    ui->display2->setFixedSize( 320, 41 );
     ui->left->setMaximum( dw.width() );
     ui->top->setMaximum( dw.height() );
     ui->width->setMaximum( dw.width() );
@@ -80,27 +117,21 @@ AppWidget::AppWidget(QWidget *parent)
     connect( ui->height, SIGNAL(valueChanged(int)), this, SLOT(slotCapParamsChanged()) );
     connect( ui->frequency, SIGNAL(valueChanged(int)), this, SLOT(slotCapParamsChanged()) );
     connect( ui->onTop, SIGNAL(toggled(bool)), this, SLOT(slotOnTopChanged()) );
-    QButtonGroup * buttGroup = new QButtonGroup( this );
-    buttGroup->addButton( ui->btnOff );
-    buttGroup->addButton( ui->btnGame );
-    buttGroup->addButton( ui->btnChallenge );
-    buttGroup->addButton( ui->btnLearn1 );
-    buttGroup->addButton( ui->btnLearn2 );
     slotOnTopChanged();
 
     // create the capture
-    m_capture = new Capture( this );
+    m_capture = new ScreenCapture( this );
     connect( m_capture, SIGNAL(gotPixmap(const QPixmap &, const QPoint &)),
              this, SLOT(slotProcessPixmap(const QPixmap &, const QPoint &)) );
     slotCapParamsChanged();
 
     // create the OCR, train with font and saved glyphs
     m_ocr = new Ocr();
-
+#if 0
     QFont font( "Arial", 32 );
     font.setBold( true );
     m_ocr->trainFont( font );
-
+#endif
     QDirIterator dIt( QCoreApplication::applicationDirPath() + QDir::separator() + "wc-glyphs", QStringList() << "glyph_*.png", QDir::Files );
     while ( dIt.hasNext() ) {
         QString fileName = dIt.next();
@@ -119,11 +150,39 @@ AppWidget::AppWidget(QWidget *parent)
 AppWidget::~AppWidget()
 {
     saveSettings();
+    delete m_pickingRegion;
     delete m_settings;
     delete m_ocr;
     delete m_game;
     delete m_capture;
     delete ui;
+}
+
+void AppWidget::mousePressEvent( QMouseEvent * event )
+{
+    if ( m_pickingRegion )
+        m_pickingRegion->setStartPos( event->globalPos() );
+}
+
+void AppWidget::mouseMoveEvent( QMouseEvent * event )
+{
+    if ( m_pickingRegion )
+        m_pickingRegion->setEndPos( event->globalPos() );
+}
+
+void AppWidget::mouseReleaseEvent( QMouseEvent * event )
+{
+    if ( m_pickingRegion ) {
+        m_pickingRegion->setEndPos( event->globalPos() );
+        ui->left->setValue( m_pickingRegion->rX );
+        ui->top->setValue( m_pickingRegion->rY );
+        ///ui->width->setValue( m_pickingRegion->rWidth );
+        ///ui->height->setValue( m_pickingRegion->rHeight );
+        slotCapParamsChanged();
+        delete m_pickingRegion;
+        m_pickingRegion = 0;
+        releaseMouse();
+    }
 }
 
 void AppWidget::saveSettings()
@@ -134,6 +193,42 @@ void AppWidget::saveSettings()
     m_settings->setValue( "rect/height", ui->height->value() );
     m_settings->setValue( "rect/frequency", ui->frequency->value() );
     m_settings->setValue( "rect/ontop", ui->onTop->isChecked() );
+}
+
+void AppWidget::on_gameNo_toggled( bool checked )
+{
+    if ( checked ) {
+        delete m_game;
+        m_game = 0;
+    }
+}
+
+void AppWidget::on_gameWc_toggled( bool checked )
+{
+    if ( checked ) {
+        delete m_game;
+        m_game = new WCGame( this );
+    }
+}
+
+void AppWidget::on_gameWcLearn_toggled(bool checked)
+{
+    if ( checked ) {
+        //delete m_game;
+        //m_game = new WCLearn( this );
+    }
+}
+
+void AppWidget::on_pickRegionButton_clicked()
+{
+    m_pickingRegion = new RegionWidget();
+    grabMouse( Qt::CrossCursor );
+}
+
+void AppWidget::on_trainButton_clicked()
+{
+    if ( m_game )
+        m_game->train( m_ocr, ui->trainLetters->text(), m_capture->lastPixmap().toImage() );
 }
 
 void AppWidget::slotOnTopChanged()
@@ -152,62 +247,18 @@ void AppWidget::slotCapParamsChanged()
     QRect captureRect( ui->left->value(), ui->top->value(), ui->width->value(), ui->height->value() );
     m_capture->setGeometry( captureRect );
     m_capture->setFrequency( ui->frequency->value() );
+    ui->capDisplay->setFixedSize( captureRect.size() );
 }
 
 void AppWidget::slotProcessPixmap( const QPixmap & pixmap, const QPoint & /*cursor*/ )
 {
-    QPixmap pix = pixmap;
-    QPainter pp( &pix );
-    pp.setPen( Qt::red );
-    pp.drawRect( 121, 248, 35 - 1, 37 - 1 );
-    pp.drawRect( 175, 248, 35 - 1, 37 - 1 );
-    pp.drawRect( 230, 248, 35 - 1, 37 - 1 );
-    pp.drawRect( 284, 248, 35 - 1, 37 - 1 );
-    pp.drawRect( 338, 248, 35 - 1, 37 - 1 );
-    pp.drawRect( 393, 248, 35 - 1, 37 - 1 );
-    pp.end();
-    ui->display1->setPixmap( pix.copy( 0, 0, 16, 16 ).scaled( 64, 64, Qt::IgnoreAspectRatio, Qt::FastTransformation ) );
-    ui->display2->setPixmap( pix.copy( 114, 245, 320, 41 ) );
-}
+    // highlight pixmap
+    if ( m_game )
+        ui->capDisplay->setPixmap( m_game->highlightPixmap( pixmap ) );
+    else
+        ui->capDisplay->setPixmap( pixmap );
 
-void AppWidget::on_btnGame_toggled( bool checked )
-{
-    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
-
-    delete m_game;
-    m_game = 0;
-    if ( checked )
-        m_game = new GameState( ui, m_capture, m_ocr, this );
-}
-
-void AppWidget::on_btnChallenge_toggled( bool checked )
-{
-    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
-}
-
-void AppWidget::on_btnLearn1_toggled( bool checked )
-{
-    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
-}
-
-void AppWidget::on_btnLearn2_toggled( bool checked )
-{
-    qWarning("%s %d", __PRETTY_FUNCTION__, checked);
-}
-
-void AppWidget::on_trainButton_clicked()
-{
-    // find out the string
-    QString letters = ui->trainLetters->text();
-    QImage gamePixmap = m_capture->currentPixmap().toImage();
-    int pixLetters[ 6 ] = { 121, 175, 230, 284, 338, 393 };
-    int pixLetterTop = 248;
-    int pixLetterWidth = 35;
-    int pixLetterHeight = 37;
-    for ( int i = 0; i < 6; i++ ) {
-        QImage letter = gamePixmap.copy( pixLetters[ i ], pixLetterTop, pixLetterWidth, pixLetterHeight );
-        QChar character = letters.at( i );
-        letter.save( QString( "wc-glyphs/glyph_%1.png" ).arg( character.toLatin1() ), "PNG" );
-        m_ocr->trainGlyph( letter, character );
-    }
+    // make da move!
+    if ( m_game )
+        m_game->run( ui, m_capture, m_ocr );
 }

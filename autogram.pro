@@ -5,19 +5,21 @@ TARGET = autogram
 TEMPLATE = app
 SOURCES += main.cpp \
     AppWidget.cpp \
-    Capture.cpp \
+    ScreenCapture.cpp \
     InputUtils.cpp \
     Scrambler.cpp \
-    GameState.cpp \
+    AbstractGame.cpp \
     ocr/Ocr.cpp \
-    ocr/OcrCompare.cpp
+    ocr/OcrCompare.cpp \
+    WCGame.cpp
 HEADERS += AppWidget.h \
-    Capture.h \
+    ScreenCapture.h \
     InputUtils.h \
     Scrambler.h \
-    GameState.h \
+    AbstractGame.h \
     ocr/Ocr.h \
-    ocr/OcrCompare.h
+    ocr/OcrCompare.h \
+    WCGame.h
 FORMS += AppWidget.ui
 unix:LIBS += -lXtst
 OBJECTS_DIR = .obj

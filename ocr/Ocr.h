@@ -46,7 +46,7 @@ class Ocr
         void clearTraning();
 
         // recognize a glyph
-        OcrResult recognizeGlyph( const QImage & image, const QRect & rect = QRect() );
+        OcrResult recognizeGlyph( const QImage & image, const QRect & rect = QRect() ) const;
 
     private:
         QList< OcrGlyph * > m_glyphs;

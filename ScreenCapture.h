@@ -17,36 +17,42 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef __GameState_h__
-#define __GameState_h__
+#ifndef __ScreenCapture_h__
+#define __ScreenCapture_h__
 
 #include <QObject>
-#include <QTime>
-class Capture;
-class Ocr;
-class Scrambler;
-namespace Ui { class AppWidgetClass; }
+#include <QBasicTimer>
+#include <QList>
+#include <QImage>
+#include <QPixmap>
 
-class GameState : public QObject
+class ScreenCapture : public QObject
 {
     Q_OBJECT
     public:
-        GameState( Ui::AppWidgetClass * ui, Capture * capture, Ocr * ocr, QObject * parent );
-        ~GameState();
+        ScreenCapture( QObject * parent );
+
+        void setEnabled( bool enabled );
+        bool enabled() const;
+        void setGeometry( const QRect & geometry );
+        QRect geometry() const;
+        void setFrequency( int fps );
+        int frequency() const;
+
+        QPixmap lastPixmap() const;
 
     Q_SIGNALS:
-        void gameEnded();
+        void gotPixmap( const QPixmap & pixmap, const QPoint & cursorPos );
+
+    protected:
+        void timerEvent( QTimerEvent * event );
 
     private:
-        Ui::AppWidgetClass * m_ui;
-        Capture * m_capture;
-        Ocr * m_ocr;
-        Scrambler * m_scrambler;
-        QTime m_time;
-
-
-    private Q_SLOTS:
-        void slotPlay();
+        QBasicTimer m_timer;
+        QPixmap m_pixmap;
+        QRect m_geometry;
+        bool m_enabled;
+        int m_fps;
 };
 
-#endif // __GameState_h__
+#endif
