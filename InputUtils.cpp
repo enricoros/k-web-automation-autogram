@@ -155,7 +155,9 @@ void InputUtils::keyClick( const QChar & singleChar )
 
 void InputUtils::keyClickSpecial( int qtKeyCode )
 {
-#if defined(Q_WS_WIN)
+#if defined(Q_WS_X11)
+    Display * display = QX11Info::display();
+#elif defined(Q_WS_WIN)
     // pre-init Virtual Input structure
     INPUT vinput[2];
     vinput[0].type = INPUT_KEYBOARD;
@@ -169,7 +171,7 @@ void InputUtils::keyClickSpecial( int qtKeyCode )
     switch ( qtKeyCode ) {
         case Qt::Key_Control:
 #if defined(Q_WS_X11)
-            xSendScanCode( display, XKeysymToKeycode( QX11Info::display(), KS_X11_CTRL_L ) );
+            xSendScanCode( display, XKeysymToKeycode( display, KS_X11_CTRL_L ) );
 #elif defined(Q_WS_WIN)
             vinput[0].ki.wVk = VK_CONTROL;
 #else
