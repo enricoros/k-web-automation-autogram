@@ -39,7 +39,8 @@ class WCGame : public AbstractGame
         void gameEnded();
 
     private:
-        Scrambler * m_scrambler;
+        Scrambler * m_wordsDictionary;
+        Scrambler * m_namesDictionary;
         QTime m_time;
 };
 

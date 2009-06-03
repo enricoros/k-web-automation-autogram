@@ -54,15 +54,18 @@ static const int WC_LETTER_H = 37;
 
 WCGame::WCGame( QObject * parent )
     : AbstractGame( parent )
+    , m_wordsDictionary( new Scrambler() )
+    , m_namesDictionary( new Scrambler() )
 {
-    // create the Scrambler
-    m_scrambler = new Scrambler();
-    m_scrambler->addDictionary( "dic-it.txt" );
+    // load the dictionaries
+    m_wordsDictionary->addDictionary( "dic-it.txt" );
+    m_namesDictionary->addDictionary( "dic-enrico.txt" );
 }
 
 WCGame::~WCGame()
 {
-    delete m_scrambler;
+    delete m_wordsDictionary;
+    delete m_namesDictionary;
 }
 
 QPixmap WCGame::highlightPixmap( const QPixmap & pixmap ) const
@@ -93,10 +96,20 @@ void WCGame::run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const 
     if ( m_time.elapsed() > (60 * 60 * 1000) )
         return;
 
-    // OCR screen -> 6Chars
+    // OCR screen -> 6Chars + mean color identification
     QString letters;
     QImage gamePixmap = capture->lastPixmap().toImage();
+    int meanR = 0, meanG = 0, meanB = 0;
     for ( int i = 0; i < 6; i++ ) {
+        // accumulate intermediate color (yellow for normal, pink for name)
+        if ( i > 1 ) {
+            int sampleX = (WC_BASELINE_H[ i ] + WC_BASELINE_H[ i - 1 ] + WC_LETTER_W) >> 1;
+            int sampleY = (WC_BASELINE_V[ i ] + WC_LETTER_H) >> 1;
+            QRgb sampleColor = gamePixmap.pixel( sampleX, sampleY );
+            meanR += qRed( sampleColor );
+            meanG += qGreen( sampleColor );
+            meanB += qBlue( sampleColor );
+        }
         QImage letterImage = gamePixmap.copy( WC_BASELINE_H[ i ], WC_BASELINE_V[ i ], WC_LETTER_W, WC_LETTER_H );
         OcrResult res = ocr->recognizeGlyph( letterImage );
         if ( res.confidence > 0.1 )
@@ -107,13 +120,15 @@ void WCGame::run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const 
     if ( letters.length() != 6 )
         return;
 
+    // select the dictionary based on the game type
+    QColor meanColor( meanR / 5, meanG / 5, meanB / 5 );
+    qreal meanHue = meanColor.hueF();
+    qWarning("%f", meanHue);
+    Scrambler * scrambler = m_wordsDictionary;
+
     // Do Anagram
-    QStringList words;
-    if ( ui->allWords->isChecked() )
-        words = m_scrambler->allWords( letters, ui->minLetters->value(), ui->maxLetters->value() );
-    else
-        words = m_scrambler->words( letters, ui->minLetters->value(), ui->maxLetters->value() );
-    ///ui->words->setPlainText( words.join( "," ) );
+    QStringList words = scrambler->words( letters, ui->minLetters->value(), ui->maxLetters->value() );
+    ui->anagramWords->setText(QString::number(words.size()));
 
     // Write Words
     InputUtils::mouseMove( capture->geometry().center() );
