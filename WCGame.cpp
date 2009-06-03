@@ -27,7 +27,23 @@
 #include <QTimer>
 #include <QDebug>
 #include <QPainter>
+
+//BEGIN portableMSleep
+#ifdef Q_OS_UNIX
 #include <unistd.h>
+void portableMSleep( int ms ) {
+    ::usleep( ms * 1000 );
+}
+#else
+#ifdef Q_OS_WIN32
+#include <windows.h>
+void portableMSleep( int ms ) {
+    Sleep( ms );
+}
+#endif
+#endif
+//END portableMSleep
+
 
 //static const int WC_CAP_L = 114;
 //static const int WC_CAP_T = 245;
@@ -102,11 +118,11 @@ void WCGame::run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const 
     // Write Words
     InputUtils::mouseMove( capture->geometry().center() );
     InputUtils::mouseLeftClick();
-    usleep( 200 * 1000 );
+    portableMSleep( 200 );
     int count = words.size();
     for ( int i = 0; i < count; i++ ) {
         InputUtils::keyWrite( words.at( i ) + '\n' );
-        usleep( 20 * 1000 );
+        portableMSleep( 20 );
     }
     InputUtils::keyClickSpecial( Qt::Key_Control );
 }

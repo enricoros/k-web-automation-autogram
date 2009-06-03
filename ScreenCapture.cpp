@@ -60,7 +60,7 @@ QRect ScreenCapture::geometry() const
 void ScreenCapture::setFrequency( int fps )
 {
     m_fps = fps;
-    m_timer.start( 1000 / m_fps, this );
+    m_timer.start( 100 * 1000 / m_fps, this );
 }
 
 int ScreenCapture::frequency() const

@@ -106,7 +106,7 @@ void InputUtils::keyWrite( const QString & string )
 {
     int len = string.length();
     for ( int i = 0; i < len; i++ )
-        keyClickKeysym( string.at( i ).toLatin1() );
+        keyClick( string.at( i ) );
 }
 
 #if defined(Q_WS_X11)
@@ -118,9 +118,10 @@ static void xSendScanCode( Display * display, unsigned int keyCode )
 }
 #endif
 
-void InputUtils::keyClickKeysym( char latin1 )
+void InputUtils::keyClick( const QChar & singleChar )
 {
 #if defined(Q_WS_X11)
+    char latin1 = singleChar.toLatin1();
     Display * display = QX11Info::display();
     unsigned int keyCode = XKeysymToKeycode( display, latin1 );
     if ( !keyCode ) {
@@ -132,6 +133,21 @@ void InputUtils::keyClickKeysym( char latin1 )
         }
     }
     xSendScanCode( display, keyCode );
+#elif defined(Q_WS_WIN)
+    // keypress
+    SHORT virtKey = VkKeyScan(singleChar.unicode());
+    INPUT input[2];
+    input[0].type = INPUT_KEYBOARD;
+    input[0].ki.wVk = LOBYTE(virtKey);
+    input[0].ki.wScan = 0;
+    input[0].ki.dwFlags = 0;
+    input[0].ki.time = 0;
+    input[0].ki.dwExtraInfo = 0;
+    // keyrelease
+    input[1] = input[0];
+    input[1].ki.dwFlags |= KEYEVENTF_KEYUP;
+    // send both
+    ::SendInput( 2, input, sizeof(INPUT) );
 #else
     qWarning( "InputUtils::keyClick: notImplemented()");
 #endif
@@ -139,18 +155,39 @@ void InputUtils::keyClickKeysym( char latin1 )
 
 void InputUtils::keyClickSpecial( int qtKeyCode )
 {
-#if defined(Q_WS_X11)
-    Display * display = QX11Info::display();
+#if defined(Q_WS_WIN)
+    // pre-init Virtual Input structure
+    INPUT vinput[2];
+    vinput[0].type = INPUT_KEYBOARD;
+    vinput[0].ki.wVk = 0;
+    vinput[0].ki.wScan = 0;
+    vinput[0].ki.dwFlags = 0;
+    vinput[0].ki.time = 0;
+    vinput[0].ki.dwExtraInfo = 0;
+#endif
+
     switch ( qtKeyCode ) {
         case Qt::Key_Control:
-            xSendScanCode( display, XKeysymToKeycode( display, KS_X11_CTRL_L ) );
+#if defined(Q_WS_X11)
+            xSendScanCode( display, XKeysymToKeycode( QX11Info::display(), KS_X11_CTRL_L ) );
+#elif defined(Q_WS_WIN)
+            vinput[0].ki.wVk = VK_CONTROL;
+#else
+            qWarning("InputUtils::keyClickSpecial: CTRL not implemented for this platform");
+#endif
             break;
 
         default:
-            qWarning( "InputUtils::keyClickSpecial(X11): cannot get keycode of special qtkey '%d', please provide the conversion.", qtKeyCode );
+            qWarning( "InputUtils::keyClickSpecial: cannot get keycode of special qtkey '%d', please provide the conversion.", qtKeyCode );
             break;
     }
-#else
-    qWarning( "InputUtils::keyClickSpecial: notImplemented()");
+
+#if defined(Q_WS_WIN)
+    // send keypress and keyrelease
+    if ( vinput[0].ki.wVk ) {
+        vinput[1] = vinput[0];
+        vinput[1].ki.dwFlags |= KEYEVENTF_KEYUP;
+        ::SendInput( 2, vinput, sizeof(INPUT) );
+    }
 #endif
 }

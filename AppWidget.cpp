@@ -132,7 +132,10 @@ AppWidget::AppWidget(QWidget *parent)
     font.setBold( true );
     m_ocr->trainFont( font );
 #endif
-    QDirIterator dIt( QCoreApplication::applicationDirPath() + QDir::separator() + "wc-glyphs", QStringList() << "glyph_*.png", QDir::Files );
+    QString dirString = QDir::toNativeSeparators(QCoreApplication::applicationDirPath()) + QDir::separator() + "wc-glyphs";
+    QDirIterator dIt( dirString, QStringList() << "glyph_*.png", QDir::Files );
+    if ( !dIt.hasNext() )
+        qWarning() << "ERROR: can't load glyphs.. something br0ken?" << dirString;
     while ( dIt.hasNext() ) {
         QString fileName = dIt.next();
         QChar character = fileName.right( 5 ).at( 0 );
@@ -140,7 +143,8 @@ AppWidget::AppWidget(QWidget *parent)
         if ( !image.isNull() ) {
             m_ocr->trainGlyph( image, character );
             qWarning() << "loaded" << fileName << character;
-        }
+        } else
+            qWarning() << "ERROR loading" << fileName << character;
     }
 
     // ### TEMP
