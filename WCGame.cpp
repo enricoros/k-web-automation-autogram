@@ -121,10 +121,8 @@ void WCGame::run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const 
         return;
 
     // select the dictionary based on the game type
-    QColor meanColor( meanR / 5, meanG / 5, meanB / 5 );
-    qreal meanHue = meanColor.hueF();
-    qWarning("%f", meanHue);
-    Scrambler * scrambler = m_wordsDictionary;
+    qreal meanHue = QColor( meanR / 5, meanG / 5, meanB / 5 ).hueF();
+    Scrambler * scrambler = (meanHue > 0.89 && meanHue < 0.99) ? m_namesDictionary : m_wordsDictionary;
 
     // Do Anagram
     QStringList words = scrambler->words( letters, ui->minLetters->value(), ui->maxLetters->value() );
@@ -137,7 +135,7 @@ void WCGame::run( Ui::AppWidgetClass * ui, const ScreenCapture * capture, const 
     int count = words.size();
     for ( int i = 0; i < count; i++ ) {
         InputUtils::keyWrite( words.at( i ) + '\n' );
-        portableMSleep( 20 );
+        portableMSleep( 10 );
     }
     InputUtils::keyClickSpecial( Qt::Key_Control );
 }
